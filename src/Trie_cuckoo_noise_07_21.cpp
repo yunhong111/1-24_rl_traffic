@@ -184,6 +184,13 @@ int main(int argc, char * argv[])
         haoOvers[si].assign(actionSize, 0);
     }
 
+    floatss haoOvers0;
+    haoOvers0.resize(switchNum);
+    for(int si = 0; si < switchNum; si++)
+    {
+        haoOvers0[si].assign(actionSize, 0);
+    }
+
     floatss haoOversInv;
     haoOversInv.resize(switchNum);
     for(int si = 0; si < switchNum; si++)
@@ -191,11 +198,24 @@ int main(int argc, char * argv[])
         haoOversInv[si].assign(actionSize, 0);
     }
 
+    floatss haoOversInv0;
+    haoOversInv0.resize(switchNum);
+    for(int si = 0; si < switchNum; si++)
+    {
+        haoOversInv0[si].assign(actionSize, 0);
+    }
+
     floats haoOversAction;
     haoOversAction.assign(actionSize+1,0);
 
     floats haoOversActionTtl;
     haoOversActionTtl.assign(actionSize+1,0);
+
+    floats haoOversAction0;
+    haoOversAction0.assign(actionSize+1,0);
+
+    floats haoOversActionTtl0;
+    haoOversActionTtl0.assign(actionSize+1,0);
 
     size_ts countNum;
     size_ts countNum0;
@@ -239,10 +259,14 @@ int main(int argc, char * argv[])
     keySums.resize(switchNum);
     countIPs.resize(switchNum);
 
+    floatss countIPs0;
+    countIPs0.resize(switchNum);
+
     for(int si = 0; si < switchNum; si++)
     {
         keySums[si].assign(actionSize,0);
         countIPs[si].assign(actionSize,0);
+        countIPs0[si].assign(actionSize,0);
     }
 
     floatss keySumsInv;
@@ -250,10 +274,14 @@ int main(int argc, char * argv[])
     keySumsInv.resize(switchNum);
     countIPsInv.resize(switchNum);
 
+    floatss countIPsInv0;
+    countIPsInv0.resize(switchNum);
+
     for(int si = 0; si < switchNum; si++)
     {
         keySumsInv[si].assign(actionSize,0);
         countIPsInv[si].assign(actionSize,0);
+        countIPsInv0[si].assign(actionSize,0);
     }
 
     uint64_t line = 0;
@@ -314,6 +342,7 @@ int main(int argc, char * argv[])
             {
                 keySumsInv[si][ai] = 0;
                 countIPsInv[si][ai] = 0;
+                countIPsInv0[si][ai] = 0;
             }
 
         }
@@ -332,6 +361,7 @@ int main(int argc, char * argv[])
                 {
                     keySumsInv[si][ai] = 0;
                     countIPsInv[si][ai] = 0;
+                    countIPsInv0[si][ai] = 0;
                 }
             }
 
@@ -361,6 +391,7 @@ int main(int argc, char * argv[])
                     {
                         keySums[si][ai] = 0;
                         countIPs[si][ai] = 0;
+                        countIPs0[si][ai] = 0;
                     }
 
                 }
@@ -385,7 +416,7 @@ int main(int argc, char * argv[])
             //size_t flowNum = flows.size();
 
             # pragma omp parallel for \
-            shared ( infile,isEndFlag, updateInvDis, line, mask, keySum, pktSum, aggrSum, keySums, countIPs, countIP, countNum, countIP0, countNum0, \
+            shared ( infile,isEndFlag, updateInvDis, line, mask, keySum, pktSum, aggrSum, keySums, countIPs, countIP, countIPs0, countNum, countIP0, countNum0, \
                      countBlack,  trie, vuniquePrefix,vuniqueAggPrefix, cuckooFilter, \
                      cuckooFilterInit0,cuckooBlackKeyTable,cuckooTableKey,cuckooAggrKeyTable,cuckooFilterFlowEst) \
             private ( ei )
@@ -444,9 +475,11 @@ int main(int argc, char * argv[])
 
                             size_ts keySumsLocal;
                             size_ts countIPsLocal;
+                            size_ts countIPsLocal0;
 
                             keySumsLocal.assign(actionSize,0);
                             countIPsLocal.assign(actionSize,0);
+                            countIPsLocal0.assign(actionSize,0);
 
                             if(CUCKOO_BLACK_SIZE > 0)
                             {
@@ -609,6 +642,19 @@ int main(int argc, char * argv[])
                                     //#pragma omp atomic
                                     countIP0Local += flag_look0*(flowNoInt);
 
+                                    // each action lookups
+                                    for(int ai = 0; ai <actionSize; ai++)
+                                    {
+                                        for(int li = 0; li < iactions.size(); li++)
+                                        {
+                                            if(iactions[li] == flowactionunique[si][ai])
+                                            {
+                                                countIPsLocal0[ai] += (flowNoInt);
+                                            }
+
+                                        }
+                                    }
+
                                 }
 
                             }
@@ -643,10 +689,14 @@ int main(int argc, char * argv[])
                                     //#pragma omp atomic
                                     countIPs[si][ai] += countIPsLocal[ai];
 
+                                    countIPs0[si][ai] += countIPsLocal0[ai];
+
                                     //#pragma omp atomic
                                     keySumsInv[si][ai] += keySumsLocal[ai];
                                     //#pragma omp atomic
                                     countIPsInv[si][ai] += countIPsLocal[ai];
+
+                                    countIPsInv0[si][ai] += countIPsLocal0[ai];
                                 }
                             }
                             size_ts().swap(keySumsLocal);
@@ -704,6 +754,16 @@ int main(int argc, char * argv[])
                                 {
                                     haoOversInv[si][ai] = float(countIPsInv[si][ai]-keySumsInv[si][ai])/float(keySumsInv[si][ai]);
                                 }
+
+                                if(keySums[si][ai] != 0)
+                                {
+                                    haoOvers0[si][ai] = float(countIPs0[si][ai]-keySums[si][ai])/float(keySums[si][ai]);
+                                }
+
+                                if(keySumsInv[si][ai] != 0)
+                                {
+                                    haoOversInv0[si][ai] = float(countIPsInv0[si][ai]-keySumsInv[si][ai])/float(keySumsInv[si][ai]);
+                                }
                             }
 
                             if(keySumTotal[si] != 0)
@@ -726,8 +786,13 @@ int main(int argc, char * argv[])
                         float countIPsSum = 0;
                         float keySumsSum = 0;
 
+                        float countIPsSum0 = 0;
+
                         float countIPsSumTtl = 0;
                         float keySumsSumTtl = 0;
+
+                        float countIPsSumTtl0 = 0;
+
 
                         for(int si = 0; si < switchNum; si++)
                         {
@@ -738,9 +803,11 @@ int main(int argc, char * argv[])
                                 {
                                     countIPsSum += countIPsInv[si][ri];
                                     keySumsSum += keySumsInv[si][ri];
+                                    countIPsSum0 += countIPsInv0[si][ri];
 
                                     countIPsSumTtl += countIPs[si][ri];
                                     keySumsSumTtl += keySums[si][ri];
+                                    countIPsSumTtl0 += countIPs0[si][ri];
 
                                 }
                             }
@@ -752,6 +819,12 @@ int main(int argc, char * argv[])
 
                         if(keySumsSumTtl != 0)
                             haoOversActionTtl[ai] = (countIPsSumTtl - keySumsSumTtl)/keySumsSumTtl;
+
+                        if(keySumsSum != 0)
+                            haoOversAction0[ai] = (countIPsSum0 - keySumsSum)/keySumsSum;
+
+                        if(keySumsSumTtl != 0)
+                            haoOversActionTtl0[ai] = (countIPsSumTtl0 - keySumsSumTtl)/keySumsSumTtl;
                     }
                 }
 
@@ -776,7 +849,19 @@ int main(int argc, char * argv[])
 
                 outfile0[si]<<"countIP,"<<countIPTotal[si]<<",countIP0,"<<countIP0Total[si]<<",keysum,"<<keySumTotal[si]<<
                 ",pktSum,"<<pktSumTotal[si]<<",aggrSum,"<<aggrSum[si]<<",blackkey_num,"<<countBlack[si]<<",feedback,"<<blackBackSize<<",feedsumportion,"
-                <<feedSumPortion[si]<<",finger0,"<<finger0<<",finger,"<<finger<<",time,"<<timeInv<<",runTime,"<<runTime<<endl;
+                <<feedSumPortion[si]<<",finger0,"<<finger0<<",finger,"<<finger<<",time,"<<timeInv<<",runTime,"<<runTime<<",";
+
+                for(int ai = 0; ai < actionSize+1; ai++)
+                    outfile0[si]<<"over_uai0,"<<haoOversAction0[ai]<<",";
+                for(int ai = 0; ai < actionSize+1; ai++)
+                    outfile0[si]<<"over_utai,"<<haoOversActionTtl[ai]<<",";
+                for(int ai = 0; ai < actionSize+1; ai++)
+                    outfile0[si]<<"over_utai0,"<<haoOversActionTtl0[ai]<<",";
+                for(int ai = 0; ai < actionSize; ai++)
+                    outfile0[si]<<"over_ai0,"<<haoOvers0[si][ai]<<",";
+                for(int ai = 0; ai < actionSize; ai++)
+                    outfile0[si]<<"over_inv_ai0,"<<haoOversInv0[si][ai]<<",";
+                outfile0[si]<<endl;
 
 
                 cout<<endl<<"line "<<line<<" total "<<haoFalsePosTotal[si]<<" total0 "<<haoFalsePos0Total[si]<<" false "<<
@@ -1552,11 +1637,12 @@ void loadKeys2Filter(string& inFileName, vector<size_t>& mask, VUPrefix& vunique
         // Init blackkey file
         cout<<"* Write blackkey to file!"<<endl;
         ofstream blackKeyFileOut;
+        BLACKFILENAME = "../test/blackkeyfile_" + string(argv[2]) + '_' +
+                        string(argv[4])+ "_tstNum_"+ string(argv[5])+"_b"+string(argv[6]);
         //for(int si =0; si <switchNum; si++)
         {
-            BLACKFILENAME = "../test/blackkeyfile_" + string(argv[2]) + '_' +
-                        string(argv[4])+ "_tstNum_"+ string(argv[5])+"_b"+string(argv[6])+ num2str(si);
-            blackKeyFileOut.open(BLACKFILENAME.c_str());
+            string bkFile = BLACKFILENAME + num2str(si);
+            blackKeyFileOut.open(bkFile.c_str());
             blackKeyFileOut.clear();
             blackKeyFileOut.close();
         }

@@ -19,7 +19,7 @@ for i in $(seq 0 10)
 do
 	export OMP_NUM_THREADS=8
 	
-	./trieNoiseMain ${keyFile} ${memSize[0]} ${ipfileFolder} ${feedbackPortion[2]} ${interval[0]} ${blackKeySize[1]} ${count[i]}
+	./rl_msw ${keyFile} ${memSize[0]} ${ipfileFolder} ${feedbackPortion[2]} ${interval[0]} ${blackKeySize[1]} ${count[i]}
 
 done
 

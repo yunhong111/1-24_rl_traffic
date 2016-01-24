@@ -4,7 +4,7 @@ DFLAGS =         # common defines
 OPENMP = -fopenmp
 
 OBJ =   otherFun.o Trie_cuckoo_noise_07_21.o trie.o cuckoo_filter.o aggregation_add_cuckoo.o cuckoo_table.o hash_function.o sha1.o RL.o
-PROG = trieNoiseMain
+PROG = rl_msw
 
 all:	$(PROG)
 

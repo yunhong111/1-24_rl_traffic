@@ -13,12 +13,14 @@ interval=(2000000 5000000 10000000 20000000 50000000 100000000)
 
 blackKeySize=(500 1000 2000 4000 8000)
 
+count=(0 1 2 3 4 5 6 7 8 9 10)
+
 for i in $(seq 0 0)
 
 do
 	export OMP_NUM_THREADS=8
 
-	./trieNoiseMain ${keyFile} ${memSize[i]} ${ipfileFolder} ${feedbackPortion[2]} ${interval[0]} ${blackKeySize[1]}
+	./rl_msw ${keyFile} ${memSize[i]} ${ipfileFolder} ${feedbackPortion[2]} ${interval[0]} ${blackKeySize[1]} ${count[i]}
 
 done
 
